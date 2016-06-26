@@ -31,11 +31,11 @@ defmodule ArcTest.Processor do
   end
 
   test "returns the original path for :noaction transformations" do
-    assert Arc.Processor.process(DummyDefinition, :original, {Arc.File.new(@img), nil}).path == @img
+    assert Arc.Processor.process(DummyDefinition, :original, {Arc.File.new(@img, DummyDefinition), nil}).path == @img
   end
 
   test "transforms a copied version of file according to the specified transformation" do
-    new_file = Arc.Processor.process(DummyDefinition, :thumb, {Arc.File.new(@img), nil})
+    new_file = Arc.Processor.process(DummyDefinition, :thumb, {Arc.File.new(@img, DummyDefinition), nil})
     assert new_file.path != @img
     assert "128x128" == geometry(@img) #original file untouched
     assert "10x10" == geometry(new_file.path)
@@ -43,7 +43,7 @@ defmodule ArcTest.Processor do
   end
 
   test "transforms a copied version of file according to a function transformation that returns a string" do
-    new_file = Arc.Processor.process(DummyDefinition, :med, {Arc.File.new(@img), nil})
+    new_file = Arc.Processor.process(DummyDefinition, :med, {Arc.File.new(@img, DummyDefinition), nil})
     assert new_file.path != @img
     assert "128x128" == geometry(@img) #original file untouched
     assert "10x10" == geometry(new_file.path)
@@ -51,7 +51,7 @@ defmodule ArcTest.Processor do
   end
 
   test "transforms a copied version of file according to a function transformation that returns a list" do
-    new_file = Arc.Processor.process(DummyDefinition, :small, {Arc.File.new(@img), nil})
+    new_file = Arc.Processor.process(DummyDefinition, :small, {Arc.File.new(@img, DummyDefinition), nil})
     assert new_file.path != @img
     assert "128x128" == geometry(@img) #original file untouched
     assert "10x10" == geometry(new_file.path)
@@ -60,13 +60,13 @@ defmodule ArcTest.Processor do
 
   test "raises an error in an invalid transformation" do
     assert_raise Arc.ConvertError, ~r"unrecognized option", fn ->
-      Arc.Processor.process(BrokenDefinition, :thumb, {Arc.File.new(@img), nil})
+      Arc.Processor.process(BrokenDefinition, :thumb, {Arc.File.new(@img, BrokenDefinition), nil})
     end
   end
 
   test "raises an error if the given transformation executable cannot be found" do
     assert_raise Arc.MissingExecutableError, ~r"blah", fn ->
-      Arc.Processor.process(MissingExecutableDefinition, :original, {Arc.File.new(@img), nil})
+      Arc.Processor.process(MissingExecutableDefinition, :original, {Arc.File.new(@img, MissingExecutableDefinition), nil})
     end
   end
 

@@ -1,6 +1,7 @@
 defmodule ArcTest.Storage.Local do
   use ExUnit.Case
   @img "test/support/image.png"
+  @identifier "80d1b482-a675-4ec2-aec7-0f39631b770d"
 
   setup_all do
     File.mkdir_p("arctest/uploads")
@@ -20,13 +21,14 @@ defmodule ArcTest.Storage.Local do
     def __versions, do: [:original, :thumb]
     def storage_dir(_, _), do: "arctest/uploads"
     def __storage, do: Arc.Storage.Local
-    def filename(:original, {file, _}), do: "original-#{Path.basename(file.file_name, Path.extname(file.file_name))}"
-    def filename(:thumb, {file, _}), do: "1/thumb-#{Path.basename(file.file_name, Path.extname(file.file_name))}"
+    def identifier, do: fn-> "80d1b482-a675-4ec2-aec7-0f39631b770d" end
+    def filename(:original, {file, _}) do IO.inspect(file); "original-#{file.identifier}-#{Path.basename(file.file_name, Path.extname(file.file_name))}" end
+    def filename(:thumb, {file, _}), do: "1/thumb-#{file.identifier}-#{Path.basename(file.file_name, Path.extname(file.file_name))}"
   end
 
   test "put, delete, get" do
-    assert {:ok, "original-image.png"} == Arc.Storage.Local.put(DummyDefinition, :original, {Arc.File.new(%{filename: "original-image.png", path: @img}), nil})
-    assert {:ok, "1/thumb-image.png"} == Arc.Storage.Local.put(DummyDefinition, :thumb, {Arc.File.new(%{filename: "1/thumb-image.png", path: @img}), nil})
+    assert {:ok, "original-image.png"} == Arc.Storage.Local.put(DummyDefinition, :original, {Arc.File.new(%{filename: "original-image.png", path: @img}, DummyDefinition), nil})
+    assert {:ok, "1/thumb-image.png"} == Arc.Storage.Local.put(DummyDefinition, :thumb, {Arc.File.new(%{filename: "1/thumb-image.png", path: @img}, DummyDefinition), nil})
 
     assert File.exists?("arctest/uploads/original-image.png")
     assert File.exists?("arctest/uploads/1/thumb-image.png")
@@ -35,7 +37,7 @@ defmodule ArcTest.Storage.Local do
 
     Arc.Storage.Local.delete(DummyDefinition, :original, {%{file_name: "image.png"}, nil})
     Arc.Storage.Local.delete(DummyDefinition, :thumb, {%{file_name: "image.png"}, nil})
-    refute File.exists?("arctest/uploads/original-image.png")
-    refute File.exists?("arctest/uploads/1/thumb-image.png")
+    refute File.exists?("arctest/uploads/original-#{@identifier}-image.png")
+    refute File.exists?("arctest/uploads/1/thumb-#{@identifier}-image.png")
   end
 end

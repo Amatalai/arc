@@ -6,7 +6,7 @@ defmodule Arc.Actions.Store do
   end
 
   def store(definition, {file, scope}) when is_binary(file) or is_map(file) do
-    put(definition, {Arc.File.new(file), scope})
+    put(definition, {Arc.File.new(file, definition), scope})
   end
 
   def store(definition, filepath) when is_binary(filepath) or is_map(filepath) do
@@ -32,12 +32,12 @@ defmodule Arc.Actions.Store do
     definition.__versions
     |> Enum.map(fn(r)    -> async_put_version(definition, r, {file, scope}) end)
     |> Enum.map(fn(task) -> Task.await(task, version_timeout) end)
-    |> handle_responses(file.file_name)
+    |> handle_responses(file)
   end
 
-  defp handle_responses(responses, filename) do
+  defp handle_responses(responses, file) do
     errors = Enum.filter(responses, fn(resp) -> elem(resp, 0) == :error end) |> Enum.map(fn(err) -> elem(err, 1) end)
-    if Enum.empty?(errors), do: {:ok, filename}, else: {:error, errors}
+    if Enum.empty?(errors), do: {:ok, %{file_name: file.file_name, identifier: file.identifier}}, else: {:error, errors}
   end
 
   defp version_timeout do
@@ -51,9 +51,13 @@ defmodule Arc.Actions.Store do
   end
 
   defp put_version(definition, version, {file, scope}) do
+    IO.write("a")
+    IO.inspect file
     file      = Arc.Processor.process(definition, version, {file, scope})
+    IO.inspect file
+    IO.write("b")
     file_name = Arc.Definition.Versioning.resolve_file_name(definition, version, {file, scope})
-    file      = %Arc.File{file | file_name: file_name}
+    file      = %Arc.File{file | file_name: file_name} 
     definition.__storage.put(definition, version, {file, scope})
   end
 end
